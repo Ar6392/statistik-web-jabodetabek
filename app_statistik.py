@@ -11,7 +11,10 @@ st.title("📊 Statistik Jabodetabek (Web Version)")
 file = st.file_uploader("Upload Excel / CSV", type=["xlsx", "xls", "csv"])
 
 if file:
-    # Load data
+
+    # =====================
+    # LOAD DATA
+    # =====================
     if file.name.endswith("csv"):
         df = pd.read_csv(file)
     else:
@@ -22,7 +25,6 @@ if file:
     st.write("Preview Data")
     st.dataframe(df.head())
 
-    # Pilih kolom
     cols = df.columns.tolist()
     col1 = st.selectbox("Kolom 1", cols)
     col2 = st.selectbox("Kolom 2", cols)
@@ -32,7 +34,6 @@ if file:
 
     if st.button("Lakukan Analisis"):
 
-        # Ambil data numerik
         try:
             x = df[col1].dropna().astype(float).values
             y = df[col2].dropna().astype(float).values
@@ -40,16 +41,13 @@ if file:
             st.error("Kolom harus berisi angka")
             st.stop()
 
-        # Jika data terlalu besar (Shapiro max stabil ~5000)
-        if len(x) > 5000:
-            x_sample = np.random.choice(x, 5000, replace=False)
-        else:
-            x_sample = x
+        if paired == "Ya" and len(x) != len(y):
+            st.error("Data harus sama panjang untuk paired test")
+            st.stop()
 
-        if len(y) > 5000:
-            y_sample = np.random.choice(y, 5000, replace=False)
-        else:
-            y_sample = y
+        # Sampling untuk Shapiro jika >5000
+        x_sample = np.random.choice(x, 5000, replace=False) if len(x) > 5000 else x
+        y_sample = np.random.choice(y, 5000, replace=False) if len(y) > 5000 else y
 
         # =====================
         # Statistik Deskriptif
@@ -67,54 +65,31 @@ if file:
         desc_x = describe(x)
         desc_y = describe(y)
 
-        result = ""
-        result += "📊 Statistik Deskriptif:\n"
-        result += (
-            f"- {col1}: Mean={desc_x['Mean']:.3f}, Median={desc_x['Median']:.3f}, "
-            f"Std Dev={desc_x['Std']:.3f}, N={desc_x['N']}, "
-            f"Min={desc_x['Min']}, Max={desc_x['Max']}\n"
-        )
-        result += (
-            f"- {col2}: Mean={desc_y['Mean']:.3f}, Median={desc_y['Median']:.3f}, "
-            f"Std Dev={desc_y['Std']:.3f}, N={desc_y['N']}, "
-            f"Min={desc_y['Min']}, Max={desc_y['Max']}\n\n"
-        )
+        result = "📊 Statistik Deskriptif:\n"
+        result += f"- {col1}: Mean={desc_x['Mean']:.3f}, Median={desc_x['Median']:.3f}, Std Dev={desc_x['Std']:.3f}, N={desc_x['N']}, Min={desc_x['Min']}, Max={desc_x['Max']}\n"
+        result += f"- {col2}: Mean={desc_y['Mean']:.3f}, Median={desc_y['Median']:.3f}, Std Dev={desc_y['Std']:.3f}, N={desc_y['N']}, Min={desc_y['Min']}, Max={desc_y['Max']}\n\n"
 
         is_paired = paired == "Ya"
+        effect_value = 0
 
         # =====================
         # ANALISIS PAIRED
         # =====================
         if is_paired:
 
-            if len(x) != len(y):
-                st.error("Data harus sama panjang untuk paired test")
-                st.stop()
-
             diff = x - y
             _, p_norm = shapiro(diff if len(diff) <= 5000 else np.random.choice(diff, 5000, replace=False))
-
-            result += f"🧪 Normalitas Selisih (Shapiro-Wilk): p = {p_norm:.12e} → {'Normal' if p_norm > 0.05 else 'Tidak Normal'}\n\n"
+            result += f"🧪 Normalitas Selisih: p = {p_norm:.12e} → {'Normal' if p_norm > 0.05 else 'Tidak Normal'}\n\n"
 
             if p_norm > 0.05:
                 stat, p = ttest_rel(x, y)
-                cohen_d = np.mean(diff) / np.std(diff, ddof=1)
-
-                result += (
-                    "🔍 Paired t-test:\n"
-                    f"t = {stat:.3f}, p-value = {p:.30e}\n"
-                    f"Cohen's d = {cohen_d:.3f}"
-                )
+                effect_value = np.mean(diff) / np.std(diff, ddof=1)
+                result += f"🔍 Paired t-test:\nt = {stat:.3f}, p-value = {p:.30e}\nCohen's d = {effect_value:.3f}"
             else:
                 stat, p = wilcoxon(x, y)
                 n = len(x)
-                rank_biserial = 1 - (2 * stat) / (n * (n + 1) / 2)
-
-                result += (
-                    "🔍 Wilcoxon Test:\n"
-                    f"W = {stat:.3f}, p-value = {p:.30e}\n"
-                    f"Rank biserial = {rank_biserial:.3f}"
-                )
+                effect_value = 1 - (2 * stat) / (n * (n + 1) / 2)
+                result += f"🔍 Wilcoxon Test:\nW = {stat:.3f}, p-value = {p:.30e}\nRank biserial = {effect_value:.3f}"
 
         # =====================
         # ANALISIS INDEPENDENT
@@ -124,37 +99,61 @@ if file:
             _, p_x = shapiro(x_sample)
             _, p_y = shapiro(y_sample)
 
-            result += f"🧪 Normalitas Group 1 (Shapiro-Wilk): p = {p_x:.12e} → {'Normal' if p_x > 0.05 else 'Tidak Normal'}\n"
-            result += f"🧪 Normalitas Group 2 (Shapiro-Wilk): p = {p_y:.12e} → {'Normal' if p_y > 0.05 else 'Tidak Normal'}\n\n"
+            result += f"🧪 Normalitas Group 1: p = {p_x:.12e} → {'Normal' if p_x > 0.05 else 'Tidak Normal'}\n"
+            result += f"🧪 Normalitas Group 2: p = {p_y:.12e} → {'Normal' if p_y > 0.05 else 'Tidak Normal'}\n\n"
 
             if p_x > 0.05 and p_y > 0.05:
                 stat_levene, p_levene = levene(x, y)
                 result += f"🧪 Levene Test: p = {p_levene:.6f} → {'Homogen' if p_levene > 0.05 else 'Tidak Homogen'}\n\n"
 
-                if p_levene > 0.05:
-                    stat, p = ttest_ind(x, y, equal_var=True)
-                else:
-                    stat, p = ttest_ind(x, y, equal_var=False)
+                stat, p = ttest_ind(x, y, equal_var=p_levene > 0.05)
+                effect_value = abs(np.mean(x) - np.mean(y)) / np.sqrt((np.var(x, ddof=1) + np.var(y, ddof=1)) / 2)
 
-                effect = abs(np.mean(x) - np.mean(y)) / np.sqrt(
-                    (np.var(x, ddof=1) + np.var(y, ddof=1)) / 2
-                )
-
-                result += (
-                    "🔍 Independent t-test:\n"
-                    f"t = {stat:.3f}, p-value = {p:.30e}\n"
-                    f"Cohen's d = {effect:.3f}"
-                )
+                result += f"🔍 Independent t-test:\nt = {stat:.3f}, p-value = {p:.30e}\nCohen's d = {effect_value:.3f}"
             else:
                 stat, p = mannwhitneyu(x, y, alternative="two-sided")
                 n1, n2 = len(x), len(y)
-                rank_biserial = 1 - (2 * stat) / (n1 * n2)
+                effect_value = 1 - (2 * stat) / (n1 * n2)
 
-                result += (
-                    "🔍 Mann–Whitney U Test:\n"
-                    f"U = {stat:.3f}, p-value = {p:.30e}\n"
-                    f"Rank biserial = {rank_biserial:.3f}"
-                )
+                result += f"🔍 Mann–Whitney U Test:\nU = {stat:.3f}, p-value = {p:.30e}\nRank biserial = {effect_value:.3f}"
+
+        # =====================
+        # RANGKUMAN IMPACT
+        # =====================
+        result += "\n\n📌 Rangkuman Analisa:\n"
+
+        alpha = 0.05
+        signif = "Signifikan" if p < alpha else "Tidak Signifikan"
+
+        mean_x = np.mean(x)
+        mean_y = np.mean(y)
+
+        if mean_x > mean_y:
+            direction = f"{col1} lebih tinggi dari {col2}"
+        elif mean_y > mean_x:
+            direction = f"{col2} lebih tinggi dari {col1}"
+        else:
+            direction = "Rata-rata keduanya sama"
+
+        eff = abs(effect_value)
+
+        if eff < 0.2:
+            eff_label = "Very Small"
+        elif eff < 0.5:
+            eff_label = "Small"
+        elif eff < 0.8:
+            eff_label = "Medium"
+        else:
+            eff_label = "Large"
+
+        result += f"- Hasil uji: {signif} (p-value = {p:.5f})\n"
+        result += f"- Arah perbedaan: {direction}\n"
+        result += f"- Effect Size: {eff_label} ({eff:.3f})\n"
+
+        if signif == "Signifikan":
+            result += "👉 Terdapat impact statistik antara kedua kelompok.\n"
+        else:
+            result += "👉 Tidak terdapat impact statistik yang bermakna.\n"
 
         # =====================
         # TAMPILKAN HASIL
@@ -163,7 +162,7 @@ if file:
         st.code(result)
 
         # =====================
-        # Grafik
+        # GRAFIK
         # =====================
         fig, ax = plt.subplots()
 
