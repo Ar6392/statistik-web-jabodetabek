@@ -11,7 +11,7 @@ st.set_page_config(page_title="Statistik Jabodetabek", layout="wide")
 # =====================
 menu = st.sidebar.radio(
     "Menu Aplikasi",
-    ["📈 Analisis Data", "📘 Panduan Penggunaan", "📊 Contoh Data"]
+    ["📈 Analisis Data", "📘 Panduan Penggunaan", "📊 Contoh Persiapan Data"]
 )
 
 # =====================
@@ -199,4 +199,5 @@ if menu == "📈 Analisis Data":
                 ax.set_ylabel(col2)
 
             st.pyplot(fig)
+
 
