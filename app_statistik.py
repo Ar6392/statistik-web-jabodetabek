@@ -109,4 +109,5 @@ if file:
             ax.set_xlabel(col1)
             ax.set_ylabel(col2)
 
+
         st.pyplot(fig)
