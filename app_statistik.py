@@ -29,7 +29,7 @@ if menu == "📘 Panduan Penggunaan":
 # =====================
 # CONTOH DATA (GOOGLE SHEETS)
 # =====================
-if menu == "📊 Contoh Data":
+if menu == "📊 Contoh Persiapan Data":
     st.title("📊 Contoh Dataset Format Excel")
 
     sheet_url = "https://docs.google.com/spreadsheets/d/18hWnma_Q3hxMZW71elsveLwdt8ETGycZg9uoivKI448/preview"
@@ -199,3 +199,4 @@ if menu == "📈 Analisis Data":
                 ax.set_ylabel(col2)
 
             st.pyplot(fig)
+
