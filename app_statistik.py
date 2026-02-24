@@ -4,8 +4,8 @@ import numpy as np
 from scipy.stats import ttest_rel, wilcoxon, shapiro, ttest_ind, mannwhitneyu, levene
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Statistik Web", layout="wide")
-st.title("📊 Statistik Otomatis (Web Version)")
+st.set_page_config(page_title="Statistik Jabodetabek", layout="wide")
+st.title("📊 Statistik Jabodetabek (Web Version)")
 
 # Upload file
 file = st.file_uploader("Upload Excel / CSV", type=["xlsx", "xls", "csv"])
@@ -111,3 +111,4 @@ if file:
 
 
         st.pyplot(fig)
+
