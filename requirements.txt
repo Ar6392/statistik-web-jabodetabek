@@ -3,7 +3,5 @@ pandas
 numpy
 scipy
 matplotlib
-openpyxl
-xlrd
 streamlit-oauth
 openpyxl
