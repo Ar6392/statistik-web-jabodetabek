@@ -175,9 +175,18 @@ if menu == "📈 Analisis Data":
             else:
                 direction = "Rata-rata sama"
 
-            result += "\n\n📌 Rangkuman:\n"
+            result += "\n📌 Rangkuman:\n"
             result += f"- Hasil: {signif} (p-value={p:.5f})\n"
             result += f"- Arah: {direction}\n"
+            result += f"- Effect Size: {abs(effect):.3f}\n"
+
+            # 🔥 TAMBAHAN PERSENTASE
+            if p > 0.05:
+                effect_percent = (1 - p) * 100
+                result += f"- Tingkat kekuatan efek mencapai {effect_percent:.2f}% meskipun belum signifikan.\n"
+            else:
+                confidence_percent = (1 - p) * 100
+                result += f"- Tingkat keyakinan hasil mencapai {confidence_percent:.2f}%.\n"
 
             st.subheader("Hasil Analisis")
             st.code(result)
@@ -202,6 +211,7 @@ if menu == "📈 Analisis Data":
                     st.warning("Scatterplot membutuhkan jumlah data sama.")
 
             st.pyplot(fig)
+
 
 
 
