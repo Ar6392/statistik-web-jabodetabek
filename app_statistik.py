@@ -193,11 +193,15 @@ if menu == "📈 Analisis Data":
                 ax.hist(x, alpha=0.5, label=col1)
                 ax.hist(y, alpha=0.5, label=col2)
                 ax.legend()
-            else:
-                ax.scatter(x, y)
-                ax.set_xlabel(col1)
-                ax.set_ylabel(col2)
+            elif method == "Scatterplot":
+                if len(x) == len(y):
+                    ax.scatter(x, y)
+                    ax.set_xlabel(col1)
+                    ax.set_ylabel(col2)
+                else:
+                    st.warning("Scatterplot membutuhkan jumlah data sama.")
 
             st.pyplot(fig)
+
 
 
