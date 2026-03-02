@@ -164,23 +164,42 @@ if menu == "📈 Analisis Data":
             # =====================
             alpha = 0.05
             signif = "Signifikan" if p < alpha else "Tidak Signifikan"
-
+            
             mean_x = np.mean(x)
             mean_y = np.mean(y)
-
+            
             if mean_x > mean_y:
                 direction = f"{col1} lebih tinggi dari {col2}"
             elif mean_y > mean_x:
                 direction = f"{col2} lebih tinggi dari {col1}"
             else:
                 direction = "Rata-rata sama"
-
+            
+            eff = abs(effect)
+            
+            if eff < 0.2:
+                eff_label = "Very Small"
+            elif eff < 0.5:
+                eff_label = "Small"
+            elif eff < 0.8:
+                eff_label = "Medium"
+            else:
+                eff_label = "Large"
+            
             result += "\n\n📌 Rangkuman:\n"
             result += f"- Hasil: {signif} (p-value={p:.5f})\n"
             result += f"- Arah: {direction}\n"
-
-            st.subheader("Hasil Analisis")
-            st.code(result)
+            result += f"- Effect Size: {eff_label} ({eff:.3f})\n"
+            
+            # =====================
+            # TAMBAHAN PERSENTASE EFEK
+            # =====================
+            if p > 0.05:
+                effect_percent = (1 - p) * 100
+                result += f"- Tingkat kekuatan efek mencapai {effect_percent:.2f}% meskipun belum signifikan.\n"
+            else:
+                signif_percent = (1 - p) * 100
+                result += f"- Tingkat keyakinan hasil mencapai {signif_percent:.2f}%.\n"
 
             # =====================
             # GRAFIK
@@ -202,6 +221,7 @@ if menu == "📈 Analisis Data":
                     st.warning("Scatterplot membutuhkan jumlah data sama.")
 
             st.pyplot(fig)
+
 
 
 
